@@ -1,0 +1,28 @@
+Base 		-> from -45 degree to + 45 degree
+Arm  		->	from -45 degree to + 45 degree
+Shoulder 	-> from -45 degree to + 45 degree
+Gripper 	-> from -45 degree to + 45 degree
+
+First Page  
+Base Clockwise AntiClockwise
+Arm Clockwise AntiClockwise
+Shoulder Clockwise AntiClockwise
+Grippeer Clockwise AntiClockwise
+
+Base	 		left right 
+Arm 			Up down 
+Shoulder	 	clock wise and anticlock wise do nth actually =)  
+Gripper 		grab release
+up down shoulder
+left right arm 
+grab release Gripper
+
+
+Action 1 ( 90 degree ) 
+origin , go left 20, go down ,shake two times, grab stuff ,go up, go right 20, go down ,shake two times, relese stuff.
+
+
+Action 2  ( max degree ) 
+origin , go left 40, go down ,shake two times, grab stuff ,go up, go right 40, go down ,shake two times, relese stuff.
+
+Action 3 ( keep repeat 20 degree to max degree )
