@@ -45,7 +45,7 @@ int Running_Servo_POS [ALLMATRIX] = {};
 #define GRIPPER_PIN         32  /* PIN 23 */
 #define BASE_PIN            12  /* PIN 23 */
 
-void Set_PWM_to_Servo(int iServo, int iValue)
+void ConvertDegreeToPwmAndSetServo(int iServo, int iValue)
 {
   Serial.print(F("iServo: "));
   Serial.print(iServo); 
@@ -65,7 +65,6 @@ int currentPosition[4] = {90, 90, 90, 90}; // Initial positions (90 for servos, 
 //Array 
 int Servo_Act_0 [ ] PROGMEM = {  90,  90, 90,  90,  500  };
 
-
 void Servo_PROGRAM_Zero()
 {
   /* Update zero value to servo motor variable */
@@ -75,7 +74,7 @@ void Servo_PROGRAM_Zero()
 
     /* Update the servo motor to zero position */
   for (int iServo = 0; iServo < ALLSERVOS; iServo++) {
-    Set_PWM_to_Servo(iServo,Running_Servo_POS[iServo]);
+    ConvertDegreeToPwmAndSetServo(iServo,Running_Servo_POS[iServo]);
     delay(50);
   }
 }
@@ -282,15 +281,15 @@ void handleRotate() {
     currentPosition[index] -= 10;
   }
 
-  if(MIN > currentPosition[index])
+  if(0 > currentPosition[index])
   {
-    currentPosition[index] = MIN;
+    currentPosition[index] = 0;
   }
-  else if(MAX < currentPosition[index])
+  else if(180 < currentPosition[index])
   {
-    currentPosition[index] = MAX;
+    currentPosition[index] = 180;
   }
-  Set_PWM_to_Servo(index,currentPosition[index]); 
+  ConvertDegreeToPwmAndSetServo(index,currentPosition[index]); 
 
   server.send(200, "text/plain", "Rotated");
 }
