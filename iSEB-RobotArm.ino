@@ -6,25 +6,6 @@
 /* To store the calibration value for each servo motor */
 Preferences preferences;
 
-const char* ssid = "RobotArmAP"; // SSID for the ESP32 access point
-const char* password = "12345678"; // Password for the access point
-
-IPAddress local_ip(192, 168, 1, 1);
-IPAddress gateway(192, 168, 1, 1);
-IPAddress subnet(255, 255, 255, 0);
-
-WebServer server(80);
-
-// Servos matrix
-const int ALLMATRIX = 5; // GPIO14 + GPIO12 + GPIO13 + GPIO15 + GPIO16 + GPIO5 + GPIO4 + GPIO2 + Run Time
-const int ALLSERVOS = 4; // GPIO14 + GPIO12 + GPIO13 + GPIO15 + GPIO16 + GPIO5 + GPIO4 + GPIO2
-
-// Servo delay base time
-const int BASEDELAYTIME = 20; // 10 ms
-
-// Backup servo value
-int Running_Servo_POS [ALLMATRIX] = {};
-
 
 /* PWM DECLARATION START*/
 // use 12 bit precission for LEDC timer
@@ -39,11 +20,123 @@ int Running_Servo_POS [ALLMATRIX] = {};
 #define SHOULDER_CHANNEL    1   /* Chanel 1 */
 #define GRIPPER_CHANNEL     2   /* Chanel 2 */
 #define BASE_CHANNEL        3   /* Chanel 3 */
+#define BUZZER_PWM          8 /* Channel 8 */
 
 #define ARM_PIN             23  /* PIN 23 */
-#define SHOULDER_PIN        4   /* PIN 23 */
-#define GRIPPER_PIN         32  /* PIN 23 */
-#define BASE_PIN            12  /* PIN 23 */
+#define SHOULDER_PIN        4   /* PIN  4 */
+#define GRIPPER_PIN         32  /* PIN 32 */
+#define BASE_PIN            12  /* PIN 12 */
+#define buzzerPin           22  /* PIN 22 */
+/* PWM DECLARATION END */
+
+/* SERVER DECLARATION START */
+const char* ssid = "SMLab iRobotArm"; // SSID for the ESP32 access point
+const char* password = "12345678"; // Password for the access point
+
+IPAddress local_ip(192, 168, 1, 1);
+IPAddress gateway(192, 168, 1, 1);
+IPAddress subnet(255, 255, 255, 0);
+
+WebServer server(80);
+/* SERVER DECLARATION END */
+/* MOTOR DECLARATION START */
+// Motion data index
+int Servo_PROGRAM = 0;
+
+// Servos matrix
+const int ALLMATRIX = 5; 
+const int ALLSERVOS = 4; 
+
+// Servo delay base time
+const int BASEDELAYTIME = 20; // 10 ms
+
+// Backup servo value
+int Running_Servo_POS [ALLMATRIX] = {};
+
+// Standby 
+int Servo_Act_1 [ ] PROGMEM = {  90,  90, 90,  90,  500  };
+
+// Servo zero position 
+//Array 
+int Servo_Act_0 [ ] PROGMEM = {  90,  90, 90,  90,  500  };
+
+// Action 1 
+int Servo_Prg_1_Step = 14;
+int Servo_Prg_1 [][ALLMATRIX] PROGMEM = {
+  //ARM,SHOULDER,BASE,GRIPPER, ms
+  {  90,  90,  90,  90,   500  }, // origin
+  {  90,  90,  60,  90,   1000  }, // go left 20
+  {  90,  50,  60,  90,   1000  }, // go down
+  {  50,  50,  60,  90,   1000  }, // shake 1
+  { 130,  50,  60,  90,   1000  }, // shake 2
+  { 130,  50,  60, 130,   1000  }, // grab
+  {  90,  50,  60, 130,   1000  }, // arm go original 
+  {  90,  90,  60, 130,   1000  }, // go up
+  {  90,  90,  90, 130,   1000  }, // go right 20
+  {  90,  50,  90, 130,   1000  }, // go down
+  { 130,  50,  90, 130,   1000  }, // shake 1
+  {  50,  50,  90, 130,   1000  }, // shake 2
+  {  50,  50,  90,  90,   1000  }, // release
+  {  90,  90,  90,  90,   2000  }, // origin
+};
+
+// Action 2  
+int Servo_Prg_2_Step = 14;
+int Servo_Prg_2 [][ALLMATRIX] PROGMEM = {
+  //ARM,SHOULDER,BASE,GRIPPER, ms
+  {  90,  90,  90,  90,   500  }, // origin
+  {  90,  90,  60,  90,   1000  }, // go left 40
+  {  90,  50,  60,  90,   1000  }, // go down
+  {  50,  50,  60,  90,   1000  }, // shake 1
+  { 130,  50,  60,  90,   1000  }, // shake 2
+  { 130,  50,  60, 130,   1000  }, // grab
+  {  90,  50,  60, 130,   1000  }, // arm go original 
+  {  90,  90,  60, 130,   1000  }, // go up
+  {  90,  90, 120, 130,   1000  }, // go right 40
+  {  90,  50, 120, 130,   1000  }, // go down
+  { 130,  50, 120, 130,   1000  }, // shake 1
+  {  50,  50, 120, 130,   1000  }, // shake 2
+  {  50,  50, 120,  90,   1000  }, // release
+  {  90,  90,  90,  90,   2000  }, // origin
+};
+
+// Action 3 
+int Servo_Prg_3_Step = 32;
+int Servo_Prg_3 [][ALLMATRIX] PROGMEM = {
+  //ARM,SHOULDER,BASE,GRIPPER, ms
+  {  90,  90,  90,  90,   500  }, // origin
+  {  90,  90,  60,  90,   1000  }, // go left 20
+  {  90,  50,  60,  90,   1000  }, // go down
+  {  50,  50,  60,  90,   1000  }, // shake 1
+  { 130,  50,  60,  90,   1000  }, // shake 2
+  { 130,  50,  60, 130,   1000  }, // grab
+  {  90,  50,  60, 130,   1000  }, // arm go original 
+  {  90,  90,  60, 130,   1000  }, // go up
+  {  90,  90,  90, 130,   1000  }, // go right 20
+  {  90,  50,  90, 130,   1000  }, // go down
+  { 130,  50,  90, 130,   1000  }, // shake 1
+  {  50,  50,  90, 130,   1000  }, // shake 2
+  {  50,  50,  90,  90,   1000  }, // release
+  {  50,  50,  90,  90,   1000  }, // shake 1
+  { 130,  50,  90,  90,   1000  }, // shake 2
+  { 130,  50,  90, 130,   1000  }, // grab
+  {  90,  90,  90, 130,   1000  }, // go up
+  {  90,  90, 120, 130,   1000  }, // go right 20
+  {  90,  50, 120, 130,   1000  }, // go down
+  { 130,  50, 120, 130,   1000  }, // shake 1
+  {  50,  50, 120, 130,   1000  }, // shake 2
+  {  50,  50, 120,  90,   1000  }, // release
+  {  50,  50, 120,  90,   1000  }, // shake 1
+  { 130,  50, 120,  90,   1000  }, // shake 2
+  { 130,  50, 120, 130,   1000  }, // grab
+  {  90,  90, 120, 130,   1000  }, // go up
+  {  90,  90, 160, 130,   1000  }, // go right 20
+  {  90,  50, 160, 130,   1000  }, // go down
+  { 130,  50, 160, 130,   1000  }, // shake 1
+  {  50,  50, 160, 130,   1000  }, // shake 2
+  {  50,  50, 160,  90,   1000  }, // release
+  {  90,  90,  90,  90,   2000  }, // origin
+};
 
 void ConvertDegreeToPwmAndSetServo(int iServo, int iValue)
 {
@@ -52,18 +145,56 @@ void ConvertDegreeToPwmAndSetServo(int iServo, int iValue)
   Serial.print(F(" iValue: "));
   Serial.println(iValue);
   // Read from EEPROM to fix zero error reading
-  iValue = (iValue*MAX/180.0)+MIN; /* convertion to pwm value */
+  iValue = (iValue*(MAX-MIN)/180.0)+MIN; /* convertion to pwm value */
   double NewPWM = iValue + preferences.getDouble((String(iServo)).c_str(),0);
-
-  /* 0 = zero degree 550 = 180 degree*/
+  Serial.print(F(" NewPWM: "));
+  Serial.println(NewPWM);
+  /* 50 = zero degree 550 = 180 degree*/
   ledcWrite(iServo,NewPWM);
 }
 
-int currentPosition[4] = {90, 90, 90, 90}; // Initial positions (90 for servos, 0 for closed gripper)
+void Servo_PROGRAM_Run(int iMatrix[][ALLMATRIX], int iSteps)
+{
+  int INT_TEMP_A, INT_TEMP_B, INT_TEMP_C;
 
-// Servo zero position 
-//Array 
-int Servo_Act_0 [ ] PROGMEM = {  90,  90, 90,  90,  500  };
+  for (int MainLoopIndex = 0; MainLoopIndex < iSteps; MainLoopIndex++) { // iSteps number of step
+    Serial.print(F(" iSteps: "));
+    Serial.println(iSteps);
+    int InterTotalTime = iMatrix[MainLoopIndex][ALLMATRIX - 1]; // InterTotalTime - total time needed
+
+    int InterDelayCounter = InterTotalTime / BASEDELAYTIME; // InterDelayCounter time / step 
+
+    for (int InterStepLoop = 0; InterStepLoop < InterDelayCounter; InterStepLoop++) { 
+
+      for (int ServoIndex = 0; ServoIndex < ALLSERVOS; ServoIndex++) { 
+
+        INT_TEMP_A = Running_Servo_POS[ServoIndex]; // servo motor current position
+        INT_TEMP_B = iMatrix[MainLoopIndex][ServoIndex]; // servo motor next position
+
+        if (INT_TEMP_A == INT_TEMP_B) { // no update in servo motor position
+          INT_TEMP_C = INT_TEMP_B;
+        } else if (INT_TEMP_A > INT_TEMP_B) { // servo motor position position reduce
+          INT_TEMP_C =  map(BASEDELAYTIME * InterStepLoop, 0, InterTotalTime, 0, INT_TEMP_A - INT_TEMP_B); 
+          if (INT_TEMP_A - INT_TEMP_C >= INT_TEMP_B) {
+            ConvertDegreeToPwmAndSetServo(ServoIndex, INT_TEMP_A - INT_TEMP_C);
+          }
+        } else if (INT_TEMP_A < INT_TEMP_B) { /// servo motor position position increase
+          INT_TEMP_C =  map(BASEDELAYTIME * InterStepLoop, 0, InterTotalTime, 0, INT_TEMP_B - INT_TEMP_A); 
+          if (INT_TEMP_A + INT_TEMP_C <= INT_TEMP_B) {
+            ConvertDegreeToPwmAndSetServo(ServoIndex, INT_TEMP_A + INT_TEMP_C);
+          }
+        }
+
+      }
+      delay(BASEDELAYTIME);
+    }
+
+    // back of current servo motor position
+    for (int Index = 0; Index < ALLMATRIX; Index++) {
+      Running_Servo_POS[Index] = iMatrix[MainLoopIndex][Index];
+    }
+  }
+}
 
 void Servo_PROGRAM_Zero()
 {
@@ -72,7 +203,7 @@ void Servo_PROGRAM_Zero()
     Running_Servo_POS[Index] = Servo_Act_0[Index];
   }
 
-    /* Update the servo motor to zero position */
+  /* Update the servo motor to zero position */
   for (int iServo = 0; iServo < ALLSERVOS; iServo++) {
     ConvertDegreeToPwmAndSetServo(iServo,Running_Servo_POS[iServo]);
     delay(50);
@@ -85,14 +216,14 @@ void motorInit() {
   ledcSetup(1, LEDC_BASE_FREQ, LEDC_TIMER_12_BIT);
   ledcSetup(2, LEDC_BASE_FREQ, LEDC_TIMER_12_BIT);
   ledcSetup(3, LEDC_BASE_FREQ, LEDC_TIMER_12_BIT);
-
+  ledcSetup(BUZZER_PWM, LEDC_BASE_FREQ, LEDC_TIMER_12_BIT);
   // Attach each servo motor pin to a channel
-  ledcAttachPin(ARM_PIN       , ARM_CHANNEL);       /* ARM *//* CN8  *//* PIN 32*/
-  ledcAttachPin(SHOULDER_PIN  , SHOULDER_CHANNEL);  /* SHOULDER *//* CN10 *//* PIN  4*/
-  ledcAttachPin(GRIPPER_PIN   , GRIPPER_CHANNEL);   /* GRIPPER *//* CN2  *//* PIN 12*/
-  ledcAttachPin(BASE_PIN      , BASE_CHANNEL);      /* BASE *//* CN16 *//* PIN 23*/
+  ledcAttachPin(ARM_PIN       , ARM_CHANNEL);       /* ARM */     /* CN0  *//* PIN 32*/
+  ledcAttachPin(SHOULDER_PIN  , SHOULDER_CHANNEL);  /* SHOULDER *//* CN1 *//* PIN  4*/
+  ledcAttachPin(BASE_PIN      , BASE_CHANNEL);      /* BASE */    /* CN2 *//* PIN 23*/
+  ledcAttachPin(GRIPPER_PIN   , GRIPPER_CHANNEL);   /* GRIPPER */ /* CN3  *//* PIN 12*/
+  ledcAttachPin(buzzerPin     , BUZZER_PWM);
 }
-
 
 void setup() {
 
@@ -100,142 +231,194 @@ void setup() {
   Serial.write("Hello World\n");
 
   // Set ESP32 as an access point
+  WiFi.softAP(ssid);/* without password */
   // WiFi.softAP(ssid, password);
   WiFi.softAPConfig(local_ip, gateway, subnet); // Configure access point settings
 
   // Setup MDNS responder
-  if (!MDNS.begin("esp32")) {
+  if (!MDNS.begin("iSEBRobotArm")) {
     Serial.println("Error setting up MDNS responder!");
   }
 
   // Start the web server
   // server.on("/", handleIndex);
-  server.on("/", HTTP_GET, handleRoot);
-  server.on("/rotate", HTTP_GET, handleRotate);
-  server.begin();
-
+  server.on("/",handleIndex);
+  // server.on("/editor", handleEditor);
+  server.on("/controller", handleController);
+  // server.on("/zero", handleZero);
+  // server.on("/setting",handleSetting);
+  // server.on("/save", handleSave);
   Serial.println("HTTP server started");
+  MDNS.addService("http", "tcp", 80);
+
+  server.begin();
+  delay(100); 
 
   motorInit();
+
+
+  Serial.write("Buzzer\n"); 
+  // NOTE_C, NOTE_Cs, NOTE_D, NOTE_Eb, NOTE_E, NOTE_F, NOTE_Fs, NOTE_G, NOTE_Gs, NOTE_A, NOTE_Bb, NOTE_B, NOTE_MAX
+  ledcWriteNote(BUZZER_PWM, NOTE_A, 4);
+  delay(500);
+  ledcWriteNote(BUZZER_PWM, NOTE_A, 4);
+  delay(500);
+  ledcWriteNote(BUZZER_PWM, NOTE_A, 4);
+  delay(500);
+  ledcWriteNote(BUZZER_PWM, NOTE_F, 4);
+  delay(350);
+  ledcWriteNote(BUZZER_PWM, NOTE_Cs, 4);
+  delay(150);
+  ledcWriteNote(BUZZER_PWM, NOTE_A, 4);
+  delay(500);
+  ledcWriteNote(BUZZER_PWM, NOTE_F, 4);
+  delay(350);
+  ledcWriteNote(BUZZER_PWM, NOTE_Cs, 5);
+  delay(150);
+  ledcWriteNote(BUZZER_PWM, NOTE_A, 4);
+  delay(650);  
+  ledcWriteTone(BUZZER_PWM,0);
+
   Servo_PROGRAM_Zero();
+  Servo_PROGRAM = 0;
 }
 
 
 void loop() {
   server.handleClient();
+   if (Servo_PROGRAM >= 1 ) {
+    delay(500);
+    switch (Servo_PROGRAM) {
+      case 1: // Action 1 
+        Serial.println("Action1 Button Pressed.");
+        Servo_PROGRAM_Run(Servo_Prg_1, Servo_Prg_1_Step);
+        break;
+      case 2: // Action 2 
+        Serial.println("Action2 Button Pressed.");
+        Servo_PROGRAM_Run(Servo_Prg_2, Servo_Prg_2_Step);
+        break;   
+      case 3: // Action 3   
+        Serial.println("Action3 Button Pressed.");
+        Servo_PROGRAM_Run(Servo_Prg_3, Servo_Prg_3_Step);
+        break;    
+      case 100: // Zero
+        Serial.println("Zero");
+        Servo_PROGRAM_Zero();
+        break;
+    }
+    Servo_PROGRAM = 0;
+  }
 }
 
-// void handleIndex() {
-//   double servo7Val = preferences.getDouble("7", 0);
-//   String servo7ValStr = String(servo7Val);
-//   double servo6Val = preferences.getDouble("6", 0);
-//   String servo6ValStr = String(servo6Val);
-//   double servo5Val = preferences.getDouble("5", 0);
-//   String servo5ValStr = String(servo5Val);
-//   double servo4Val = preferences.getDouble("4", 0);
-//   String servo4ValStr = String(servo4Val);
-//   double servo3Val = preferences.getDouble("3", 0);
-//   String servo3ValStr = String(servo3Val);
-//   double servo2Val = preferences.getDouble("2", 0);
-//   String servo2ValStr = String(servo2Val);
-//   double servo1Val = preferences.getDouble("1", 0);
-//   String servo1ValStr = String(servo1Val);
-//   double servo0Val = preferences.getDouble("0", 0);
-//   String servo0ValStr = String(servo0Val);
-//   String content = "";
+void handleIndex() {
+  String content = "";
+  content += "<html>";
+  content += "<head>";
+  content += "<title>SMLab iRobotArm ™</title>";
+  content += "<meta charset=UTF-8>";
+  content += "<meta name=viewport content=width=device-width>";
+  content += "<style type=text/css>";
+  content += "body {";
+  content += "margin:0px;";
+  content += "backgound-color:#FFFFFF;";
+  content += "font-family:helvetica,arial;";
+  content += "font-size:100%;";
+  content += "color: #555555;";
+  content += "text-align: center;";
+  content += "}";
+  content += "td {";
+  content += "text-align: center;";
+  content += "}";
+  content += "span {";
+  content += "font-family:helvetica,arial;";
+  content += "font-size:70%;";
+  content += "color:#777777;";
+  content += "}";
+  content += ".button{";
+  content += "width:90%;";
+  content += "height:90%;";
+  content += "font-family:helvetica,arial;";
+  content += "font-size:100%;";
+  content += "color:#555555;";
+  content += "background:#BFDFFF;";
+  content += "border-radius:4px;";
+  content += "padding: 2px 2px 2px 2px;";
+  content += "border:none;}";
+  content += ".button:active{";
+  content += "background-color:#999;";
+  content += "color:white;}";
+  content += ".button2{background-color:#BFFFCF;}";
+  content += ".button3{background-color:#FFBFBF;}"; 
+  content += ".button4{background-color:#FFCC99;}";
+  content += ".button5{background-color:#FFE599;}";
+  content += ".button6{background-color:#CFBFFF;}";
+  content += "</style>";
+  content += "</head>";
+  content += "<body><h1>SMLab iRobotArm ™</h1>";
+  content += "<table width=100% height=30%>";
+  content += "<tr>";
+  content += "<td width=33%><button class=\"button button2\" onclick=controlPm(1)>Action1</button></td>";
+  content += "<td width=33%><button class=\"button\" onclick=controlPm(2)>Action2</button></td>";
+  content += "<td width=33%><button class=\"button button3\" onclick=controlPm(3)>Action3</button></td>";
+  content += "</tr>";
+  content += "</table>";
+  content += "<table width=100% height=50%>";
+  content += "<tr><td colspan=4><span><br></span></td></tr>";
+  content += "<tr>";
+  content += "<td width=33%><button class=\"button button4\" onclick=controlServo(0,'range_0',1)>Clockwise</button></td>";
+  content += "<td width=33%>Arm <span><br>0 <input type=range id=range_0 min=0 max=180 value=90 onchange=controlServo(0,'range_0',0)> 180</span>";
+  content += "<td width=33%><button class=\"button button5\"  onclick=controlServo(0,'range_0',2)>AntiCLockise</button></td>";
+  content += "</tr>";
+  content += "<tr><td colspan=4><span><br></span></td></tr>";
+  content += "<tr>";
+  content += "<td width=33%><button class=\"button button4\"  onclick=controlServo(1,'range_1',1)>Clockwise</button></td>";
+  content += "<td width=33%>Shoulder <span><br>0 <input type=range id=range_1 min=0 max=180 value=90 onchange=controlServo(1,'range_1',0)> 180</span>";
+    content += "<td width=33%><button class=\"button button5\"  onclick=controlServo(1,'range_1',2)>AntiCLockise</button></td>";
+  content += "</tr>";
+  content += "<tr><td colspan=4><span><br></span></td></tr>";
+  content += "<tr>";
+  content += "<td width=33%><button class=\"button button4\"  onclick=controlServo(2,'range_2',1)>Clockwise</button></td>";
+  content += "<td width=33%>Base <span><br>0 <input type=range id=range_2 min=0 max=180 value=90 onchange=controlServo(2,'range_2',0)> 180</span>";
+    content += "<td width=33%><button class=\"button button5\"  onclick=controlServo(2,'range_2',2)>AntiCLockise</button></td>";
+  content += "</tr>";
+  content += "<tr><td colspan=4><span><br></span></td></tr>";
+  content += "<tr>";
+  content += "<td width=33%><button class=\"button button4\" onclick=controlServo(3,'range_3',1)>Clockwise</button></td>";
+  content += "<td width=33%>Gripper <span><br>0 <input type=range id=range_3 min=0 max=180 value=90 onchange=controlServo(3,'range_3',0)> 180</span>";
+  content += "<td width=33%><button class=\"button button5\" onclick=controlServo(3,'range_3',2)>AntiCLockise</button></td>";
+  content += "</tr>";
+  content += "</table>";
+  content += "</body>";
+  content += "<script>";  
+  content += "function controlServo(id, textId,bfAdd) {";
+  content += "var xhttp = new XMLHttpRequest();";
+  content += "var value = document.getElementById(textId).value;";
+  content += "if(1 == bfAdd) value = parseInt(value)-parseInt(\"10\");";
+  content += "if(2 == bfAdd) value = parseInt(value)+parseInt(\"10\");";
+  content += "if(parseInt(value) > 180 ) value = 180; ";
+  content += "if(parseInt(value) < 0  ) value = 0; ";
+  content += "document.querySelector('#range_' + id).value = value;";
+  content += "xhttp.onreadystatechange = function() {";
+  content += "if (xhttp.readyState == 4 && xhttp.status == 200) {";
+  content += "}";
+  content += "};";
+  content += "xhttp.open(\"GET\",\"controller?servo=\"+id+\"&value=\"+value, true);";
+  content += "xhttp.send();";
+  content += "}";
+  content += "function controlPm(id) {";
+  content += "var xhttp = new XMLHttpRequest();";
+  content += "xhttp.onreadystatechange = function() {";
+  content += "if (xhttp.readyState == 4 && xhttp.status == 200) {";
+  content += "}";
+  content += "};";
+  content += "xhttp.open(\"GET\", \"controller?pm=\"+id, true);";
+  content += "xhttp.send();";
+  content += "}";
+  content += "</script>";
+  content += "</html>";
 
-//   content += "<html>";
-//   content += "<head>";
-//   content += "<title>Servo calibration</title>";
-//   content += "<meta charset=UTF-8>";
-//   content += "<meta name=viewport content=width=device-width>";
-//   content += "<style type=text/css>";
-//   content += "body {";
-//   content += "margin: 0px;";
-//   content += "backgound-color: #FFFFFF;";
-//   content += "font-family: helvetica, arial;";
-//   content += "font-size: 100%;";
-//   content += "color: #555555;";
-//   content += "}";
-//   content += "td {";
-//   content += "text-align: center;";
-//   content += "}";
-//   content += "span {";
-//   content += "font-family: helvetica, arial;";
-//   content += "font-size: 70%;";
-//   content += "color: #777777;";
-//   content += "}";
-//   content += "input[type=text] {";
-//   content += "width: 40%;";
-//   content += "font-family: helvetica, arial;";
-//   content += "font-size: 90%;";
-//   content += "color: #555555;";
-//   content += "text-align: center;";
-//   content += "padding: 3px 3px 3px 3px;";
-//   content += "}";
-//   content += "button {";
-//   content += "width: 40%;";
-//   content += "font-family: helvetica, arial;";
-//   content += "font-size: 90%;";
-//   content += "color: #555555;";
-//   content += "background: #BFDFFF;";
-//   content += "padding: 5px 5px 5px 5px;";
-//   content += "border: none;";
-//   content += "}";
-//   content += "</style>";
-//   content += "</head>";
-//   content += "<body>";
-//   content += "<br>";
-//   content += "<table width=100% height=90%>";
-//   content += "<tr>";
-//   content += "<td width=50%>WALKING1<br/><input type=text id=servo_0 value=\"" + servo0ValStr + "\"><button type=button style=background:#FFE599 onclick=saveServo(0,'servo_0')>SET</button></td>";
-//   content += "<td width=50%>MERUS1<br/><input type=text id=servo_4 value=\"" + servo4ValStr + "\"><button type=button style=background:#FFE599 onclick=saveServo(4,'servo_4')>SET</button></td>";
-//   content += "</tr>";
-//   content += "<tr>";
-//   content += "<td>WALKING2<br/><input type=text id=servo_1 value=\"" + servo1ValStr + "\"><button type=button onclick=saveServo(1,'servo_1')>SET</button></td>";
-//   content += "<td>MERUS2<br/><input type=text id=servo_5 value=\"" + servo5ValStr + "\"><button type=button onclick=saveServo(5,'servo_15')>SET</button></td>";
-//   content += "</tr>";
-//   content += "<tr>";
-//   content += "<td>WALKING3<br/><input type=text id=servo_2 value=\"" + servo2ValStr + "\"><button type=button onclick=saveServo(2,'servo_2')>SET</button></td>";
-//   content += "<td>MERUS3<br/><input type=text id=servo_6 value=\"" + servo6ValStr + "\"><button type=button onclick=saveServo(6,'servo_6')>SET</button></td>";
-//   content += "</tr>";
-//   content += "<tr>";
-//   content += "<td>WALKING4<br/><input type=text id=servo_3 value=\"" + servo3ValStr + "\"><button type=button style=background:#FFE599 onclick=saveServo(3,'servo_3')>SET</button></td>";
-//   content += "<td>MERUS4<br/><input type=text id=servo_7 value=\"" + servo7ValStr + "\"><button type=button style=background:#FFE599 onclick=saveServo(7,'servo_7')>SET</button></td>";
-//   content += "</tr>";
-//   content += "<tr>";
-//   content += "<td colspan=2><button type=button style=background:#FFBFBF onclick=saveServo(100,0)>RESET ALL</button></td>";
-//   content += "</tr>";
-//   content += "</table>";
-//   content += "</body>";
-//   content += "<script>";
-//   content += "function saveServo(id, textId) {";
-//   content += "var xhttp = new XMLHttpRequest();";
-//   content += "var value = \"0\";";
-//   content += "if(id==100){";
-//   content += "document.getElementById(\"servo_3\").value = \"0\";";
-//   content += "document.getElementById(\"servo_2\").value = \"0\";";
-//   content += "document.getElementById(\"servo_1\").value = \"0\";";
-//   content += "document.getElementById(\"servo_0\").value = \"0\";";
-//   content += "}else{";
-//   content += "value = document.getElementById(textId).value;";
-//   content += "}";
-//   content += "xhttp.onreadystatechange = function() {";
-//   content += "if (xhttp.readyState == 4 && xhttp.status == 200) {";
-//   content += "document.getElementById(\"demo\").innerHTML = xhttp.responseText;";
-//   content += "}";
-//   content += "};";
-//   content += "xhttp.open(\"GET\",\"save?key=\"+id+\"&value=\"+value, true);";
-//   content += "xhttp.send();";
-//   content += "}";
-//   content += "</script>";
-//   content += "</html>";
+  server.send(200, "text/html", content);
 
-//   server.send(200, "text/html", content);
-// }
-
-void handleRoot() {
-  
   String page = "<html><head><style>button {font-size: 20px;}</style></head><body>";
   page += "<h1>Robot Arm Control</h1>";
   page += "<p><button style='color: red;' onclick='rotate(\"base\", \"clockwise\")'>Base Rotate Clockwise</button>";
@@ -252,48 +435,22 @@ void handleRoot() {
   server.send(200, "text/html", page);
 }
 
-void handleRotate() {
-  
-  String axis = server.arg("axis");
-  String direction = server.arg("direction");
-  Serial.print("handle rotate axis: ");
-  Serial.print(axis);
-  Serial.print(" | direction: ");
-  Serial.println(direction);
-
-  int index;
-  if (axis == "arm") {
-    index = 0;
-  } else if (axis == "shoulder") {
-    index = 1;
-  } else if (axis == "gripper") {
-    index = 2;
-  } else if (axis == "base") {
-    index = 3;
-  } else {
-    server.send(400, "text/plain", "Invalid axis");
-    return;
+void handleController()
+{
+  String pm = server.arg("pm");
+  String servo = server.arg("servo");
+  String value = server.arg("value");
+  Serial.println("Controller pm: "+pm+" servo: "+servo +" value: "+value);
+  if (pm != "") {
+    Servo_PROGRAM = pm.toInt();
+    server.send(200, "text/html", "(pm)=(" + pm + ")");
   }
 
-  if (direction == "clockwise") {
-    currentPosition[index] += 10;
-  } else if (direction == "anticlockwise") {
-    currentPosition[index] -= 10;
+  if (servo != "" && value!= "") {
+    ConvertDegreeToPwmAndSetServo(servo.toInt(),value.toInt());
+    server.send(200, "text/html", "servo =" + servo + " value =" + value);
   }
-
-  if(0 > currentPosition[index])
-  {
-    currentPosition[index] = 0;
-  }
-  else if(180 < currentPosition[index])
-  {
-    currentPosition[index] = 180;
-  }
-  ConvertDegreeToPwmAndSetServo(index,currentPosition[index]); 
-
-  server.send(200, "text/plain", "Rotated");
+  server.send(200, "text/html", "Input invalid");
 }
-
-
 
 
