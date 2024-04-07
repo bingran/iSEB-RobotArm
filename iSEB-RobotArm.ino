@@ -241,13 +241,8 @@ void setup() {
   }
 
   // Start the web server
-  // server.on("/", handleIndex);
   server.on("/",handleIndex);
-  // server.on("/editor", handleEditor);
   server.on("/controller", handleController);
-  // server.on("/zero", handleZero);
-  // server.on("/setting",handleSetting);
-  // server.on("/save", handleSave);
   Serial.println("HTTP server started");
   MDNS.addService("http", "tcp", 80);
 
