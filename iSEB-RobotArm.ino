@@ -223,6 +223,7 @@ void motorInit() {
   ledcAttachPin(BASE_PIN      , BASE_CHANNEL);      /* BASE */    /* CN2 *//* PIN 23*/
   ledcAttachPin(GRIPPER_PIN   , GRIPPER_CHANNEL);   /* GRIPPER */ /* CN3  *//* PIN 12*/
   ledcAttachPin(buzzerPin     , BUZZER_PWM);
+  delay(50);
 }
 
 void setup() {
@@ -250,7 +251,6 @@ void setup() {
   delay(100); 
 
   motorInit();
-
 
   Serial.write("Buzzer\n"); 
   // NOTE_C, NOTE_Cs, NOTE_D, NOTE_Eb, NOTE_E, NOTE_F, NOTE_Fs, NOTE_G, NOTE_Gs, NOTE_A, NOTE_Bb, NOTE_B, NOTE_MAX
