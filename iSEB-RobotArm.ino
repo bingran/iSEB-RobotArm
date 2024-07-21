@@ -150,7 +150,7 @@ void ConvertDegreeToPwmAndSetServo(int iServo, int iValue)
   Serial.print(F(" NewPWM: "));
   Serial.println(NewPWM);
   /* 50 = zero degree 550 = 180 degree*/
-  ledcWrite(iServo,NewPWM);
+  ledcWriteChannel(iServo,NewPWM);
 }
 
 void Servo_PROGRAM_Run(int iMatrix[][ALLMATRIX], int iSteps)
@@ -211,18 +211,13 @@ void Servo_PROGRAM_Zero()
 }
 
 void motorInit() {
-  // Set base frequency and resolution for all channels
-  ledcSetup(0, LEDC_BASE_FREQ, LEDC_TIMER_12_BIT);
-  ledcSetup(1, LEDC_BASE_FREQ, LEDC_TIMER_12_BIT);
-  ledcSetup(2, LEDC_BASE_FREQ, LEDC_TIMER_12_BIT);
-  ledcSetup(3, LEDC_BASE_FREQ, LEDC_TIMER_12_BIT);
-  ledcSetup(BUZZER_PWM, LEDC_BASE_FREQ, LEDC_TIMER_12_BIT);
-  // Attach each servo motor pin to a channel
-  ledcAttachPin(ARM_PIN       , ARM_CHANNEL);       /* ARM */     /* CN0  *//* PIN 32*/
-  ledcAttachPin(SHOULDER_PIN  , SHOULDER_CHANNEL);  /* SHOULDER *//* CN1 *//* PIN  4*/
-  ledcAttachPin(BASE_PIN      , BASE_CHANNEL);      /* BASE */    /* CN2 *//* PIN 23*/
-  ledcAttachPin(GRIPPER_PIN   , GRIPPER_CHANNEL);   /* GRIPPER */ /* CN3  *//* PIN 12*/
-  ledcAttachPin(buzzerPin     , BUZZER_PWM);
+  // PWM setup
+  ledcAttachChannel(ARM_PIN       ,LEDC_BASE_FREQ, LEDC_TIMER_12_BIT, ARM_CHANNEL);       /* ARM */     /* CN0  *//* PIN 32*/
+  ledcAttachChannel(SHOULDER_PIN  ,LEDC_BASE_FREQ, LEDC_TIMER_12_BIT, SHOULDER_CHANNEL);  /* SHOULDER *//* CN1 *//* PIN  4*/
+  ledcAttachChannel(BASE_PIN      ,LEDC_BASE_FREQ, LEDC_TIMER_12_BIT, BASE_CHANNEL);      /* BASE */    /* CN2 *//* PIN 23*/
+  ledcAttachChannel(GRIPPER_PIN   ,LEDC_BASE_FREQ, LEDC_TIMER_12_BIT, GRIPPER_CHANNEL);   /* GRIPPER */ /* CN3  *//* PIN 12*/
+  ledcAttachChannel(buzzerPin     ,LEDC_BASE_FREQ, LEDC_TIMER_12_BIT, BUZZER_PWM);
+
   delay(50);
 }
 
